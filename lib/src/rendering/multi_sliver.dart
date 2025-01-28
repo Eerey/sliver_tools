@@ -30,6 +30,7 @@
 import 'dart:math';
 
 import 'package:flutter/rendering.dart';
+import 'package:sliver_tools/src/rendering/sliver_pinned_header.dart';
 
 class MultiSliverParentData extends SliverPhysicalParentData
     with ContainerParentDataMixin<RenderObject> {
@@ -444,7 +445,26 @@ class RenderMultiSliver extends RenderSliver
       constraints.axisDirection,
       constraints.growthDirection,
     );
+
+    /// INFO: This is required in order to
+    /// show sticky headers in a reversed list.
+    ///
+    final _headerChildren = <RenderSliverPinnedHeader>[];
     for (final child in _childrenInPaintOrder) {
+      // for (final child in _childrenInPaintOrder.toList().reversed) {
+      final childParentData = child.parentData as MultiSliverParentData;
+      final childGeometry = childParentData.geometry;
+      if (childGeometry.visible) {
+        final childPaintOffset =
+            _finalPaintOffsetForChild(child, effectiveAxisDirection);
+        if (child is! RenderSliverPinnedHeader) {
+          context.paintChild(child, offset + childPaintOffset);
+        } else {
+          _headerChildren.add(child);
+        }
+      }
+    }
+    for (final child in _headerChildren) {
       final childParentData = child.parentData as MultiSliverParentData;
       final childGeometry = childParentData.geometry;
       if (childGeometry.visible) {
